@@ -1,59 +1,71 @@
-﻿using DesafioFundamentos.Models;
+using System.Globalization;
+using DesafioFundamentos.Models;
 
-// Coloca o encoding para UTF8 para exibir acentuação
+// Usa o padrão brasileiro para ler preços e exibir valores monetários.
 Console.OutputEncoding = System.Text.Encoding.UTF8;
+CultureInfo.CurrentCulture = new CultureInfo("pt-BR");
 
-decimal precoInicial = 0;
-decimal precoPorHora = 0;
+Console.WriteLine("Seja bem-vindo ao sistema de estacionamento!");
+if (!LerPreco("Digite o preço inicial (ex.: 5,00):", out decimal precoInicial)
+    || !LerPreco("Agora digite o preço por hora (ex.: 2,50):", out decimal precoPorHora))
+{
+    Console.WriteLine("O programa se encerrou");
+    return;
+}
 
-Console.WriteLine("Seja bem vindo ao sistema de estacionamento!\n" +
-                  "Digite o preço inicial:");
-precoInicial = Convert.ToDecimal(Console.ReadLine());
-
-Console.WriteLine("Agora digite o preço por hora:");
-precoPorHora = Convert.ToDecimal(Console.ReadLine());
-
-// Instancia a classe Estacionamento, já com os valores obtidos anteriormente
 Estacionamento es = new Estacionamento(precoInicial, precoPorHora);
-
-string opcao = string.Empty;
 bool exibirMenu = true;
 
-// Realiza o loop do menu
 while (exibirMenu)
 {
-    Console.Clear();
-    Console.WriteLine("Digite a sua opção:");
+    Console.WriteLine("\nDigite a sua opção:");
     Console.WriteLine("1 - Cadastrar veículo");
     Console.WriteLine("2 - Remover veículo");
     Console.WriteLine("3 - Listar veículos");
     Console.WriteLine("4 - Encerrar");
 
-    switch (Console.ReadLine())
+    switch (Console.ReadLine()?.Trim())
     {
         case "1":
             es.AdicionarVeiculo();
             break;
-
         case "2":
             es.RemoverVeiculo();
             break;
-
         case "3":
             es.ListarVeiculos();
             break;
-
         case "4":
+        case null: // Encerra também quando a entrada do console termina.
             exibirMenu = false;
             break;
-
         default:
-            Console.WriteLine("Opção inválida");
+            Console.WriteLine("Opção inválida. Escolha uma opção de 1 a 4.");
             break;
     }
-
-    Console.WriteLine("Pressione uma tecla para continuar");
-    Console.ReadLine();
 }
 
 Console.WriteLine("O programa se encerrou");
+
+static bool LerPreco(string mensagem, out decimal preco)
+{
+    preco = 0;
+    while (true)
+    {
+        Console.WriteLine(mensagem);
+        string entrada = Console.ReadLine();
+        if (entrada == null)
+            return false;
+
+        // Não aceita separador de milhar para evitar interpretar 2.50 como 250.
+        if (decimal.TryParse(entrada, NumberStyles.AllowLeadingWhite
+            | NumberStyles.AllowTrailingWhite | NumberStyles.AllowLeadingSign
+            | NumberStyles.AllowDecimalPoint, CultureInfo.CurrentCulture, out preco)
+            && preco >= 0)
+        {
+            return true;
+        }
+
+        Console.WriteLine("Preço inválido. Digite um número não negativo, usando vírgula para os centavos.");
+    }
+}
